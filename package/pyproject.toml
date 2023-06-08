@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "plex-tvdb-alt-orderer"
+version = "0.1.0"
+authors = [
+  { name="bpoxy" },
+]
+description = "A utility that applies alternate TVDB orders to Plex."
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = ["click", "inquirer", "plexapi", "progress", "tvdb_v4_official"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Multimedia :: Video",
+]
+
+[project.scripts]
+"plex-tvdb-alt-orderer" = "plex_tvdb_alt_orderer.main:main"
+
+[project.urls]
+"Homepage" = "https://github.com/bpoxy/plex-tvdb-alt-orderer"
+"Bug Tracker" = "https://github.com/bpoxy/plex-tvdb-alt-orderer"
