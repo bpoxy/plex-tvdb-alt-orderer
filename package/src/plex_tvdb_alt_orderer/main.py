@@ -37,7 +37,7 @@ def main(plex_section_name: str, plex_password: str, plex_server_identifier: str
     plex_show = get_plex_show(plex_section, plex_show_name)
     plex_episodes = plex_show.episodes()
     
-    tvdb_pin = prompt_if_unspecified(tvdb_pin, "your TVDB subscriber PIN")
+    tvdb_pin = text_prompt_if_unspecified(tvdb_pin, "your TVDB subscriber PIN")
     tvdb = TVDB(apikey="5f119e31-f9c5-4f0c-b1c3-064b3225e7d9", pin=tvdb_pin)
     tvdb_id = next(match.group("id") for match in [re.match(r"tvdb://(?P<id>\d+)", guid.id) for guid in plex_show.guids] if match)
     tvdb_season_type = get_tvdb_season_type(tvdb, tvdb_id, tvdb_order_name)
@@ -67,18 +67,18 @@ def get_plex_section(plex_server: PlexServer, section_name: str) -> ShowSection:
         return inquirer.prompt([inquirer.List("section", message="Select the library to update", choices=dict_to_tuple(sections_dict))])["section"]
 
 def get_plex_server(plex_password: str, plex_server_identifier: str, plex_token: str, plex_user: str) -> PlexServer:
-    plex_server_identifier = prompt_if_unspecified(plex_server_identifier, "your Plex server name (user/password authentication) or URL (token authentication)")
+    plex_server_identifier = text_prompt_if_unspecified(plex_server_identifier, "your Plex server name (user/password authentication) or URL (token authentication)")
 
     if validators.url(plex_server_identifier):
-        return PlexServer(plex_server_identifier, prompt_if_unspecified(plex_token, "your Plex token"))
+        return PlexServer(plex_server_identifier, text_prompt_if_unspecified(plex_token, "your Plex token"))
 
-    plex_user = prompt_if_unspecified(plex_user, "your Plex username")
-    plex_password = prompt_if_unspecified(plex_password, "your Plex password")
+    plex_user = text_prompt_if_unspecified(plex_user, "your Plex username")
+    plex_password = plex_password or inquirer.prompt([inquirer.Password("password", message=f"Enter your Plex password")])["password"]
     plex_account = MyPlexAccount(plex_user, plex_password)
     return plex_account.resource(plex_server_identifier).connect()
 
 def get_plex_show(section: ShowSection, show_name: str) -> Show:
-    show_name = prompt_if_unspecified(show_name, "the name of the show")
+    show_name = text_prompt_if_unspecified(show_name, "the name of the show")
     shows = section.search(title=show_name)
 
     if len(shows) == 0:
@@ -98,7 +98,7 @@ def get_tvdb_season_type(tvdb: TVDB, tvdb_id: int, order_name: str) -> str:
 
     return inquirer.prompt([inquirer.List("season_type", message="Select the order to apply", choices=dict_to_tuple(season_types_dict))])["season_type"]
 
-def prompt_if_unspecified(value: str, description: str):
+def text_prompt_if_unspecified(value: str, description: str):
     return value or inquirer.prompt([inquirer.Text("answer", message=f"Enter {description}")])["answer"]
 
 def update_plex(season: int, plex_episodes: list[Episode], tvdb_episodes: list[dict]):

@@ -14,7 +14,7 @@ However, all of this information can also be supplied via the CLI or environment
 B:\> plex-tvdb-alt-orderer
 [?] Enter your Plex server name (user/password authentication) or URL (token authentication): CoolGuyServer
 [?] Enter your Plex username: coolguy
-[?] Enter your Plex password: P@$$W0RD
+[?] Enter your Plex password: ********************
 [?] Enter the name of the show: Money Heist
 [?] Enter your TVDB subscriber PIN: ABC1234
 [?] Select the order to apply: Alternate Order
