@@ -102,15 +102,15 @@ plex-tvdb-alt-orderer --plex-server "CoolGuyServer" --plex-user coolguy --plex-p
 ### Environment Variables
 | Name | Description |
 | ------------- | ------------- |
-| `PLEX_LIBRARY` | Your Plex TV show library name. |
-| `PLEX_PASSWORD` | Your Plex password. |
-| `PLEX_SERVER` | Your Plex server name (user/password authentication) or URL (token authentication). |
-| `PLEX_SHOW` | The name of the show in Plex. |
-| `PLEX_TOKEN` | Your Plex token. |
-| `PLEX_USER` | Your Plex username. |
-| `SEASON` | The season to update (-1 to update the entire series). |
-| `TVDB_ORDER` | The TVDB order name (as specified for API-connected systems). |
-| `TVDB_PIN` | Your TVDB subscriber PIN. |
+| `ALT_ORDERER_PLEX_LIBRARY` | Your Plex TV show library name. |
+| `ALT_ORDERER_PLEX_PASSWORD` | Your Plex password. |
+| `ALT_ORDERER_PLEX_SERVER` | Your Plex server name (user/password authentication) or URL (token authentication). |
+| `ALT_ORDERER_PLEX_SHOW` | The name of the show in Plex. |
+| `ALT_ORDERER_PLEX_TOKEN` | Your Plex token. |
+| `ALT_ORDERER_PLEX_USER` | Your Plex username. |
+| `ALT_ORDERER_SEASON` | The season to update (-1 to update the entire series). |
+| `ALT_ORDERER_TVDB_ORDER` | The TVDB order name (as specified for API-connected systems). |
+| `ALT_ORDERER_TVDB_PIN` | Your TVDB subscriber PIN. |
 
 _NOTE: CLI parameters take precedence over environment variables._
 

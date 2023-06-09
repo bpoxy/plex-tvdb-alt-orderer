@@ -12,24 +12,24 @@ from tvdb_v4_official import TVDB
 UPDATE_ENTIRE_SERIES = -1
 
 @click.command()
-@click.option("--plex-library", "plex_section_name", type=str, envvar="PLEX_LIBRARY",
-              help="Your Plex TV show library name. Omit to use the PLEX_LIBRARY environment variable, choose from a list interactively or if your Plex server has a sole TV show library.")
-@click.option("--plex-password", type=str, envvar="PLEX_PASSWORD",
-              help="Your Plex password. Omit to use the PLEX_PASSWORD environment variable or enter interactively.")
-@click.option("--plex-server", "plex_server_identifier", type=str, envvar="PLEX_SERVER",
-              help="Your Plex server name (user/password authentication) or URL (token authentication). Omit to use the PLEX_SERVER environment variable or enter interactively.")
-@click.option("--plex-show", "plex_show_name", type=str, envvar="PLEX_SHOW",
-              help="The name of the show in Plex. Omit to use the PLEX_SHOW environment variable or enter interactively.")
-@click.option("--plex-token", type=str, envvar="PLEX_TOKEN",
-              help="Your Plex token. Omit to use the PLEX_TOKEN environment variable or enter interactively.")
-@click.option("--plex-user", type=str, envvar="PLEX_USER",
-              help="Your Plex username. Omit to use the PLEX_USER environment variable or enter interactively.")
-@click.option("--season", type=int, envvar="SEASON",
-              help=f"The season to update ({UPDATE_ENTIRE_SERIES} to update the entire series). Omit to use the SEASON environment variable or enter interactively.")
-@click.option("--tvdb-order", "tvdb_order_name", type=str, envvar="TVDB_ORDER",
-              help="The TVDB order name (as specified for API-connected systems). Omit to use the TVDB_ORDER environment variable or choose from a list interactively.")
-@click.option("--tvdb-pin", type=str, envvar="TVDB_PIN",
-              help="Your TVDB subscriber PIN. Omit to use the TVDB_PIN environment variable or enter interactively.")
+@click.option("--plex-library", "plex_section_name", type=str, envvar="ALT_ORDERER_PLEX_LIBRARY",
+              help="Your Plex TV show library name. Omit to use the ALT_ORDERER_PLEX_LIBRARY environment variable, choose from a list interactively or if your Plex server has a sole TV show library.")
+@click.option("--plex-password", type=str, envvar="ALT_ORDERER_PLEX_PASSWORD",
+              help="Your Plex password. Omit to use the ALT_ORDERER_PLEX_PASSWORD environment variable or enter interactively.")
+@click.option("--plex-server", "plex_server_identifier", type=str, envvar="ALT_ORDERER_PLEX_SERVER",
+              help="Your Plex server name (user/password authentication) or URL (token authentication). Omit to use the ALT_ORDERER_PLEX_SERVER environment variable or enter interactively.")
+@click.option("--plex-show", "plex_show_name", type=str, envvar="ALT_ORDERER_PLEX_SHOW",
+              help="The name of the show in Plex. Omit to use the ALT_ORDERER_PLEX_SHOW environment variable or enter interactively.")
+@click.option("--plex-token", type=str, envvar="ALT_ORDERER_PLEX_TOKEN",
+              help="Your Plex token. Omit to use the ALT_ORDERER_PLEX_TOKEN environment variable or enter interactively.")
+@click.option("--plex-user", type=str, envvar="ALT_ORDERER_PLEX_USER",
+              help="Your Plex username. Omit to use the ALT_ORDERER_PLEX_USER environment variable or enter interactively.")
+@click.option("--season", type=int, envvar="ALT_ORDERER_SEASON",
+              help=f"The season to update ({UPDATE_ENTIRE_SERIES} to update the entire series). Omit to use the ALT_ORDERER_SEASON environment variable or enter interactively.")
+@click.option("--tvdb-order", "tvdb_order_name", type=str, envvar="ALT_ORDERER_TVDB_ORDER",
+              help="The TVDB order name (as specified for API-connected systems). Omit to use the ALT_ORDERER_TVDB_ORDER environment variable or choose from a list interactively.")
+@click.option("--tvdb-pin", type=str, envvar="ALT_ORDERER_TVDB_PIN",
+              help="Your TVDB subscriber PIN. Omit to use the ALT_ORDERER_TVDB_PIN environment variable or enter interactively.")
 
 def main(plex_section_name: str, plex_password: str, plex_server_identifier: str, plex_show_name: str, plex_token: str, plex_user: str, season: int, tvdb_order_name: str, tvdb_pin: str):
     plex_server = get_plex_server(plex_password, plex_server_identifier, plex_token, plex_user)
