@@ -68,29 +68,35 @@ Usage: plex-tvdb-alt-orderer [OPTIONS]
 
 Options:
   --plex-library TEXT   Your Plex TV show library name. Omit to use the
-                        PLEX_LIBRARY environment variable, choose from a list
-                        interactively or if your Plex server has a sole TV
-                        show library.
-  --plex-password TEXT  Your Plex password. Omit to use the PLEX_PASSWORD
-                        environment variable or enter interactively.
+                        ALT_ORDERER_PLEX_LIBRARY environment variable, choose
+                        from a list interactively or if your Plex server has a
+                        sole TV show library.
+  --plex-password TEXT  Your Plex password. Omit to use the
+                        ALT_ORDERER_PLEX_PASSWORD environment variable or
+                        enter interactively.
   --plex-server TEXT    Your Plex server name (user/password authentication)
                         or URL (token authentication). Omit to use the
-                        PLEX_SERVER environment variable or enter
+                        ALT_ORDERER_PLEX_SERVER environment variable or enter
                         interactively.
   --plex-show TEXT      The name of the show in Plex. Omit to use the
-                        PLEX_SHOW environment variable or enter interactively.
-  --plex-token TEXT     Your Plex token. Omit to use the PLEX_TOKEN
-                        environment variable or enter interactively.
-  --plex-user TEXT      Your Plex username. Omit to use the PLEX_USER
-                        environment variable or enter interactively.
-  --season INTEGER      The season to update (-1 to update the entire
-                        series). Omit to use the SEASON environment variable
-                        or enter interactively.
+                        ALT_ORDERER_PLEX_SHOW environment variable or enter
+                        interactively.
+  --plex-token TEXT     Your Plex token. Omit to use the
+                        ALT_ORDERER_PLEX_TOKEN environment variable or enter
+                        interactively.
+  --plex-user TEXT      Your Plex username. Omit to use the
+                        ALT_ORDERER_PLEX_USER environment variable or enter
+                        interactively.
+  --season INTEGER      The season to update (-1 to update the entire series).
+                        Omit to use the ALT_ORDERER_SEASON environment
+                        variable or enter interactively.
   --tvdb-order TEXT     The TVDB order name (as specified for API-connected
-                        systems). Omit to use the TVDB_ORDER environment
-                        variable or choose from a list interactively.
-  --tvdb-pin TEXT       Your TVDB subscriber PIN. Omit to use the TVDB_PIN
-                        environment variable or enter interactively.
+                        systems). Omit to use the ALT_ORDERER_TVDB_ORDER
+                        environment variable or choose from a list
+                        interactively.
+  --tvdb-pin TEXT       Your TVDB subscriber PIN. Omit to use the
+                        ALT_ORDERER_TVDB_PIN environment variable or enter
+                        interactively.
   --help                Show this message and exit.
 ```
 
