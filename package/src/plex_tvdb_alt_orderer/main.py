@@ -9,6 +9,8 @@ from progress.bar import Bar
 from termcolor import colored
 from tvdb_v4_official import TVDB
 
+UPDATE_ENTIRE_SERIES = -1
+
 @click.command()
 @click.option("--plex-library", "plex_section_name", type=str, envvar="PLEX_LIBRARY",
               help="Your Plex TV show library name. Omit to use the PLEX_LIBRARY environment variable, choose from a list interactively or if your Plex server has a sole TV show library.")
@@ -22,12 +24,14 @@ from tvdb_v4_official import TVDB
               help="Your Plex token. Omit to use the PLEX_TOKEN environment variable or enter interactively.")
 @click.option("--plex-user", type=str, envvar="PLEX_USER",
               help="Your Plex username. Omit to use the PLEX_USER environment variable or enter interactively.")
+@click.option("--season", type=int, envvar="SEASON",
+              help=f"The season to update ({UPDATE_ENTIRE_SERIES} to update the entire series). Omit to use the SEASON environment variable or enter interactively.")
 @click.option("--tvdb-order", "tvdb_order_name", type=str, envvar="TVDB_ORDER",
               help="The TVDB order name (as specified for API-connected systems). Omit to use the TVDB_ORDER environment variable or choose from a list interactively.")
 @click.option("--tvdb-pin", type=str, envvar="TVDB_PIN",
               help="Your TVDB subscriber PIN. Omit to use the TVDB_PIN environment variable or enter interactively.")
 
-def main(plex_section_name: str, plex_password: str, plex_server_identifier: str, plex_show_name: str, plex_token: str, plex_user: str, tvdb_order_name: str, tvdb_pin: str):
+def main(plex_section_name: str, plex_password: str, plex_server_identifier: str, plex_show_name: str, plex_token: str, plex_user: str, season: int, tvdb_order_name: str, tvdb_pin: str):
     plex_server = get_plex_server(plex_password, plex_server_identifier, plex_token, plex_user)
     plex_section = get_plex_section(plex_server, plex_section_name)
     plex_show = get_plex_show(plex_section, plex_show_name)
@@ -39,7 +43,10 @@ def main(plex_section_name: str, plex_password: str, plex_server_identifier: str
     tvdb_season_type = get_tvdb_season_type(tvdb, tvdb_id, tvdb_order_name)
     tvdb_episodes = tvdb.get_series_episodes(tvdb_id, season_type=tvdb_season_type, lang="eng")["episodes"]
     
-    update_plex(plex_episodes, tvdb_episodes)
+    update_plex(season, plex_episodes, tvdb_episodes)
+
+def dict_to_tuple(dict: dict):
+    return [(key, value) for key, value in dict.items()]
 
 def error_exit(text: str):
     print(colored(text, "red"))
@@ -49,16 +56,15 @@ def get_plex_section(plex_server: PlexServer, section_name: str) -> ShowSection:
     sections = list(filter(lambda s: s.TYPE == "show", plex_server.library.sections()))
     sections_dict = {s.title: s for s in sections}
 
-    if section_name and section_name not in sections_dict:
-        error_exit(f"Your Plex server doesn't contain a TV show library named '{section_name}'.")
+    if section_name:
+        return sections_dict.get(section_name, None) or error_exit(f"Your Plex server doesn't contain a TV show library named '{section_name}'.")
 
     if len(sections) == 0:
         error_exit(f"Your Plex server doesn't contain a TV show library.")
     elif len(sections) == 1:
         return sections[0]
-    else: 
-        section_name = section_name or inquirer.prompt([inquirer.List("section_name", message="Select the library to update", choices=sections_dict.keys())])["section_name"]
-        return sections_dict[section_name]
+    else:
+        return inquirer.prompt([inquirer.List("section", message="Select the library to update", choices=dict_to_tuple(sections_dict))])["section"]
 
 def get_plex_server(plex_password: str, plex_server_identifier: str, plex_token: str, plex_user: str) -> PlexServer:
     plex_server_identifier = prompt_if_unspecified(plex_server_identifier, "your Plex server name (user/password authentication) or URL (token authentication)")
@@ -81,23 +87,29 @@ def get_plex_show(section: ShowSection, show_name: str) -> Show:
         return shows[0]
     else:
         shows_dict = {s.title: s for s in shows}
-        show_name = inquirer.prompt([inquirer.List("show_name", message="Select the show to update", choices=shows_dict.keys())])["show_name"]
-        return shows_dict[show_name]
+        return inquirer.prompt([inquirer.List("show", message="Select the show to update", choices=dict_to_tuple(shows_dict))])["show"]
 
 def get_tvdb_season_type(tvdb: TVDB, tvdb_id: int, order_name: str) -> str:
     season_types = tvdb.get_season_types(tvdb_id)
     season_types_dict = {s["name"]: s["type"] for s in season_types}
 
-    if order_name and order_name not in season_types_dict:
-        error_exit(f"TVDB doesn't define an order with name '{order_name}'.")
+    if order_name:
+        return season_types_dict.get(order_name, None) or error_exit(f"TVDB doesn't define an order with name '{order_name}'.")
 
-    order_name = order_name or inquirer.prompt([inquirer.List("order_name", message="Select the order to apply", choices=season_types_dict.keys())])["order_name"]
-    return season_types_dict[order_name]
+    return inquirer.prompt([inquirer.List("season_type", message="Select the order to apply", choices=dict_to_tuple(season_types_dict))])["season_type"]
 
 def prompt_if_unspecified(value: str, description: str):
     return value or inquirer.prompt([inquirer.Text("answer", message=f"Enter {description}")])["answer"]
 
-def update_plex(plex_episodes: list[Episode], tvdb_episodes: list[dict]):
+def update_plex(season: int, plex_episodes: list[Episode], tvdb_episodes: list[dict]):
+    plex_seasons_dict = {"Entire Series": UPDATE_ENTIRE_SERIES}
+    plex_seasons_dict.update({f"Season {e.parentIndex}": e.parentIndex for e in plex_episodes})
+    season = season or inquirer.prompt([inquirer.List("season", message="Select the season to update", choices=dict_to_tuple(plex_seasons_dict))])["season"]
+
+    if season != UPDATE_ENTIRE_SERIES:
+        plex_episodes = list(filter(lambda e: e.parentIndex == season, plex_episodes))
+        tvdb_episodes = list(filter(lambda e: e["seasonNumber"] == season, tvdb_episodes))
+
     tvdb_episode_dict = {}
 
     for e in tvdb_episodes:

@@ -25,6 +25,14 @@ B:\> plex-tvdb-alt-orderer
    Regional Order
    Alternate DVD Order
 
+[?] Select the season to update: Entire Series
+ > Entire Series
+   Season 1
+   Season 2
+   Season 3
+   Season 4
+   Season 5
+
 Updating Plex |################################| 48/48
 ```
 
@@ -42,6 +50,14 @@ B:\> plex-tvdb-alt-orderer
  > Alternate Order
    Regional Order
    Alternate DVD Order
+
+[?] Select the season to update: Entire Series
+ > Entire Series
+   Season 1
+   Season 2
+   Season 3
+   Season 4
+   Season 5
 
 Updating Plex |################################| 48/48
 ```
@@ -67,6 +83,9 @@ Options:
                         environment variable or enter interactively.
   --plex-user TEXT      Your Plex username. Omit to use the PLEX_USER
                         environment variable or enter interactively.
+  --season INTEGER      The season to update (-1 to update the entire
+                        series). Omit to use the SEASON environment variable
+                        or enter interactively.
   --tvdb-order TEXT     The TVDB order name (as specified for API-connected
                         systems). Omit to use the TVDB_ORDER environment
                         variable or choose from a list interactively.
@@ -77,7 +96,7 @@ Options:
 
 #### Example
 ```
-plex-tvdb-alt-orderer --plex-server "CoolGuyServer" --plex-user coolguy --plex-password P@$$W0RD --plex-show "Money Heist" --tvdb-pin ABC1234 --tvdb-order "Alternate Order"
+plex-tvdb-alt-orderer --plex-server "CoolGuyServer" --plex-user coolguy --plex-password P@$$W0RD --plex-show "Money Heist" --season -1 --tvdb-pin ABC1234 --tvdb-order "Alternate Order"
 ```
 
 ### Environment Variables
@@ -89,6 +108,7 @@ plex-tvdb-alt-orderer --plex-server "CoolGuyServer" --plex-user coolguy --plex-p
 | `PLEX_SHOW` | The name of the show in Plex. |
 | `PLEX_TOKEN` | Your Plex token. |
 | `PLEX_USER` | Your Plex username. |
+| `SEASON` | The season to update (-1 to update the entire series). |
 | `TVDB_ORDER` | The TVDB order name (as specified for API-connected systems). |
 | `TVDB_PIN` | Your TVDB subscriber PIN. |
 
