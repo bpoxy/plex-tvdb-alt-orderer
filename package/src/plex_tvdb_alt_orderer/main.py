@@ -7,6 +7,7 @@ from plexapi.myplex import MyPlexAccount, PlexServer
 from plexapi.library import ShowSection
 from plexapi.video import Episode, Show
 from progress.bar import Bar
+from termcolor import colored
 from tvdb_v4_official import TVDB
 
 @click.command()
@@ -44,16 +45,20 @@ def main(plex_section_name: str, plex_password: str, plex_server_identifier: str
 def cli_env_prompt(cli: str, env: str, description: str):
     return cli or os.getenv(env) or inquirer.prompt([inquirer.Text("answer", message=f"Enter {description}")])["answer"]
 
+def error_exit(text: str):
+    print(colored(text, "red"))
+    exit()
+
 def get_plex_section(plex_server: PlexServer, section_name: str) -> ShowSection:
     section_name = section_name or os.getenv("PLEX_LIBRARY")
     sections = list(filter(lambda s: s.TYPE == "show", plex_server.library.sections()))
     sections_dict = {s.title: s for s in sections}
 
     if section_name and section_name not in sections_dict:
-        raise ValueError(f"Your Plex server doesn't contain a TV show library named '{section_name}'.")
+        error_exit(f"Your Plex server doesn't contain a TV show library named '{section_name}'.")
 
     if len(sections) == 0:
-        raise ValueError(f"Your Plex server doesn't contain a TV show library.")
+        error_exit(f"Your Plex server doesn't contain a TV show library.")
     elif len(sections) == 1:
         return sections[0]
     else: 
@@ -76,7 +81,7 @@ def get_plex_show(section: ShowSection, show_name: str) -> Show:
     shows = section.search(title=show_name)
 
     if len(shows) == 0:
-        raise ValueError(f"Your TV show library doesn't contain a show with name '{show_name}'.")
+         error_exit(f"Your TV show library doesn't contain a show with name '{show_name}'.")
     elif len(shows) == 1:
         return shows[0]
     else:
@@ -90,7 +95,7 @@ def get_tvdb_season_type(tvdb: TVDB, tvdb_id: int, order_name: str) -> str:
     season_types_dict = {s["name"]: s["type"] for s in season_types}
 
     if order_name and order_name not in season_types_dict:
-        raise ValueError(f"TVDB doesn't define an order with name '{order_name}'.")
+        error_exit(f"TVDB doesn't define an order with name '{order_name}'.")
 
     order_name = order_name or inquirer.prompt([inquirer.List("order_name", message="Select the order to apply", choices=season_types_dict.keys())])["order_name"]
     return season_types_dict[order_name]
@@ -109,7 +114,7 @@ def update_plex(plex_episodes: list[Episode], tvdb_episodes: list[dict]):
 
     for e in plex_episodes:
         if e.parentIndex not in tvdb_episode_dict or e.index not in tvdb_episode_dict[e.parentIndex]:
-            raise KeyError(f"S{e.parentIndex:02}E{e.index:02} doesn't exist in the selected TVDB order.")
+            error_exit(f"S{e.parentIndex:02}E{e.index:02} doesn't exist in the selected TVDB order.")
 
     progress = Bar("Updating Plex", max=len(plex_episodes))
 

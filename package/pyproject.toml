@@ -11,7 +11,7 @@ authors = [
 description = "A utility that applies alternate TVDB orders to Plex."
 readme = "README.md"
 requires-python = ">=3.8"
-dependencies = ["click", "inquirer", "plexapi", "progress", "tvdb_v4_official", "validators"]
+dependencies = ["click", "inquirer", "plexapi", "progress", "termcolor", "tvdb_v4_official", "validators"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "License :: OSI Approved :: MIT License",
