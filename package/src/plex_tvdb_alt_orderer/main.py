@@ -46,8 +46,8 @@ def main(plex_section_name: str, plex_password: str, plex_server_identifier: str
     
     update_plex(season, plex_episodes, tvdb_episodes)
 
-def dict_to_tuple(dict: dict):
-    return [(key, value) for key, value in dict.items()]
+def dict_prompt(dict: dict, description: str):
+    return dict[inquirer.prompt([inquirer.List("answer", message=f"Select {description}", choices=dict.keys())])["answer"]]
 
 def error_exit(text: str):
     print(colored(text, "red"))
@@ -65,7 +65,7 @@ def get_plex_section(plex_server: PlexServer, section_name: str) -> ShowSection:
     elif len(sections) == 1:
         return sections[0]
     else:
-        return inquirer.prompt([inquirer.List("section", message="Select the library to update", choices=dict_to_tuple(sections_dict))])["section"]
+        return dict_prompt(sections_dict, "the library to update")
 
 def get_plex_server(plex_password: str, plex_server_identifier: str, plex_token: str, plex_user: str) -> PlexServer:
     plex_server_identifier = text_prompt_if_unspecified(plex_server_identifier, "your Plex server name (user/password authentication) or URL (token authentication)")
@@ -87,8 +87,7 @@ def get_plex_show(section: ShowSection, show_name: str) -> Show:
     elif len(shows) == 1:
         return shows[0]
     else:
-        shows_dict = {s.title: s for s in shows}
-        return inquirer.prompt([inquirer.List("show", message="Select the show to update", choices=dict_to_tuple(shows_dict))])["show"]
+        return dict_prompt({s.title: s for s in shows}, "the show to update")
 
 def get_tvdb_season_type(tvdb: TVDB, tvdb_id: int, order_name: str) -> str:
     season_types = tvdb.get_season_types(tvdb_id)
@@ -97,7 +96,7 @@ def get_tvdb_season_type(tvdb: TVDB, tvdb_id: int, order_name: str) -> str:
     if order_name:
         return season_types_dict.get(order_name, None) or error_exit(f"TVDB doesn't define an order with name '{order_name}'.")
 
-    return inquirer.prompt([inquirer.List("season_type", message="Select the order to apply", choices=dict_to_tuple(season_types_dict))])["season_type"]
+    return dict_prompt(season_types_dict, "the order to apply")
 
 def text_prompt_if_unspecified(value: str, description: str):
     return value or inquirer.prompt([inquirer.Text("answer", message=f"Enter {description}")])["answer"]
@@ -105,7 +104,7 @@ def text_prompt_if_unspecified(value: str, description: str):
 def update_plex(season: int, plex_episodes: list[Episode], tvdb_episodes: list[dict]):
     plex_seasons_dict = {"Entire Series": UPDATE_ENTIRE_SERIES}
     plex_seasons_dict.update({f"Season {e.parentIndex}": e.parentIndex for e in plex_episodes})
-    season = season or inquirer.prompt([inquirer.List("season", message="Select the season to update", choices=dict_to_tuple(plex_seasons_dict))])["season"]
+    season = season or dict_prompt(plex_seasons_dict, "the season to update")
 
     if season != UPDATE_ENTIRE_SERIES:
         plex_episodes = list(filter(lambda e: e.parentIndex == season, plex_episodes))
