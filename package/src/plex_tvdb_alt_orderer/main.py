@@ -42,7 +42,7 @@ def main(plex_section_name: str, plex_password: str, plex_server_identifier: str
     tvdb = TVDB(apikey="5f119e31-f9c5-4f0c-b1c3-064b3225e7d9", pin=tvdb_pin)
     tvdb_id = next(match.group("id") for match in [re.match(r"tvdb://(?P<id>\d+)", guid.id) for guid in plex_show.guids] if match)
     tvdb_season_type = get_tvdb_season_type(tvdb, tvdb_id, tvdb_order_name)
-    tvdb_episodes = tvdb.get_series_episodes(tvdb_id, season_type=tvdb_season_type, lang="eng")["episodes"]
+    tvdb_episodes = get_tvdb_episodes(tvdb, tvdb_id, tvdb_season_type)
     
     update_plex(season, plex_episodes, tvdb_episodes)
 
@@ -88,6 +88,21 @@ def get_plex_show(section: ShowSection, show_name: str) -> Show:
         return shows[0]
     else:
         return dict_prompt({s.title: s for s in shows}, "the show to update")
+
+def get_tvdb_episodes(tvdb: TVDB, tvdb_id: int, tvdb_season_type: str) -> list[dict]:
+    episodes = []
+    page = 0
+
+    while True:
+        data = tvdb.get_series_episodes(tvdb_id, season_type=tvdb_season_type, page=page, lang="eng")
+
+        if not len(data["episodes"]):
+            break
+
+        episodes.extend(data["episodes"])
+        page += 1
+        
+    return episodes
 
 def get_tvdb_season_type(tvdb: TVDB, tvdb_id: int, order_name: str) -> str:
     season_types = tvdb.get_season_types(tvdb_id)
