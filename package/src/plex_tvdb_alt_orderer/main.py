@@ -101,12 +101,12 @@ def get_tvdb_episodes(tvdb: TVDB, tvdb_id: int, tvdb_season_type: str) -> list[d
 
         episodes.extend(data["episodes"])
         page += 1
-        
+
     return episodes
 
 def get_tvdb_season_type(tvdb: TVDB, tvdb_id: int, order_name: str) -> str:
-    season_types = tvdb.get_season_types(tvdb_id)
-    season_types_dict = {s["name"]: s["type"] for s in season_types}
+    seasons = tvdb.get_series_extended(tvdb_id)["seasons"]
+    season_types_dict = {s["type"]["alternateName"] or s["type"]["name"]: s["type"]["type"] for s in seasons}
 
     if order_name:
         return season_types_dict.get(order_name, None) or error_exit(f"TVDB doesn't define an order with name '{order_name}'.")
