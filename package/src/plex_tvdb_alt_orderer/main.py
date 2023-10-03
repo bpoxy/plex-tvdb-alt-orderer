@@ -10,6 +10,7 @@ from progress.bar import Bar
 from termcolor import colored
 from tvdb_v4_official import TVDB
 
+ENGLISH = "eng"
 UPDATE_ENTIRE_SERIES = -1
 
 @click.command()
@@ -36,15 +37,15 @@ def main(plex_section_name: str, plex_password: str, plex_server_identifier: str
     plex_server = get_plex_server(plex_password, plex_server_identifier, plex_token, plex_user)
     plex_section = get_plex_section(plex_server, plex_section_name)
     plex_show = get_plex_show(plex_section, plex_show_name)
-    plex_episodes = plex_show.episodes()
     
     tvdb_pin = text_prompt_if_unspecified(tvdb_pin, "your TVDB subscriber PIN")
     tvdb = TVDB(apikey="5f119e31-f9c5-4f0c-b1c3-064b3225e7d9", pin=tvdb_pin)
     tvdb_id = next(match.group("id") for match in [re.match(r"tvdb://(?P<id>\d+)", guid.id) for guid in plex_show.guids] if match)
     tvdb_season_type = get_tvdb_season_type(tvdb, tvdb_id, tvdb_order_name)
     tvdb_episodes = get_tvdb_episodes(tvdb, tvdb_id, tvdb_season_type)
+    tvdb_seasons = get_tvdb_seasons(tvdb, tvdb_id, tvdb_season_type)
     
-    update_plex(season, plex_episodes, tvdb_episodes)
+    update_plex(season, plex_show, tvdb_episodes, tvdb_seasons)
 
 def dict_prompt(dict: dict, description: str):
     return dict[inquirer.prompt([inquirer.List("answer", message=f"Select {description}", choices=dict.keys())])["answer"]]
@@ -89,12 +90,12 @@ def get_plex_show(section: ShowSection, show_name: str) -> Show:
     else:
         return dict_prompt({s.title: s for s in shows}, "the show to update")
 
-def get_tvdb_episodes(tvdb: TVDB, tvdb_id: int, tvdb_season_type: str) -> list[dict]:
+def get_tvdb_episodes(tvdb: TVDB, tvdb_id: int, tvdb_season_type: str) -> dict:
     episodes = []
     page = 0
 
     while True:
-        data = tvdb.get_series_episodes(tvdb_id, season_type=tvdb_season_type, page=page, lang="eng")
+        data = tvdb.get_series_episodes(tvdb_id, season_type=tvdb_season_type, page=page, lang=ENGLISH)
 
         if not len(data["episodes"]):
             break
@@ -102,7 +103,18 @@ def get_tvdb_episodes(tvdb: TVDB, tvdb_id: int, tvdb_season_type: str) -> list[d
         episodes.extend(data["episodes"])
         page += 1
 
-    return episodes
+    episode_dict = {}
+
+    for e in episodes:
+        episode_number = e["number"]
+        season_number = e["seasonNumber"]
+
+        if season_number not in episode_dict:
+            episode_dict[season_number] = {}
+
+        episode_dict[season_number][episode_number] = e
+        
+    return episode_dict
 
 def get_tvdb_season_type(tvdb: TVDB, tvdb_id: int, order_name: str) -> str:
     seasons = tvdb.get_series_extended(tvdb_id)["seasons"]
@@ -113,37 +125,47 @@ def get_tvdb_season_type(tvdb: TVDB, tvdb_id: int, order_name: str) -> str:
 
     return dict_prompt(season_types_dict, "the order to apply")
 
+def get_tvdb_seasons(tvdb: TVDB, tvdb_id: int, tvdb_season_type: str) -> dict:
+    season_dict = {}
+    seasons = list(filter(lambda s: s["type"]["type"] == tvdb_season_type, tvdb.get_series_extended(tvdb_id)["seasons"]))
+
+    for s in seasons:
+        season_dict[s["number"]] = tvdb.get_season(s["id"])
+
+        if (len(s["nameTranslations"]) and ENGLISH in s["nameTranslations"][0]) or (len(s["overviewTranslations"]) and ENGLISH in s["overviewTranslations"][0]):
+            season_dict[s["number"]].update(tvdb.get_season_translation(s["id"], ENGLISH))
+
+    return season_dict
+
 def text_prompt_if_unspecified(value: str, description: str):
     return value or inquirer.prompt([inquirer.Text("answer", message=f"Enter {description}")])["answer"]
 
-def update_plex(season: int, plex_episodes: list[Episode], tvdb_episodes: list[dict]):
-    plex_seasons_dict = {"Entire Series": UPDATE_ENTIRE_SERIES}
-    plex_seasons_dict.update({f"Season {e.parentIndex}": e.parentIndex for e in plex_episodes})
-    season = season or dict_prompt(plex_seasons_dict, "the season to update")
+def update_plex(season: int, plex_show: Show, tvdb_episodes: dict, tvdb_seasons: dict):
+    plex_episodes = plex_show.episodes()
+    plex_seasons = plex_show.seasons()
+
+    season_prompt_dict = {"Entire Series": UPDATE_ENTIRE_SERIES}
+    season_prompt_dict.update({f"Season {e.parentIndex}": e.parentIndex for e in plex_episodes})
+    season = season or dict_prompt(season_prompt_dict, "the season to update")
 
     if season != UPDATE_ENTIRE_SERIES:
         plex_episodes = list(filter(lambda e: e.parentIndex == season, plex_episodes))
-        tvdb_episodes = list(filter(lambda e: e["seasonNumber"] == season, tvdb_episodes))
-
-    tvdb_episode_dict = {}
-
-    for e in tvdb_episodes:
-        episode_number = e["number"]
-        season_number = e["seasonNumber"]
-
-        if season_number not in tvdb_episode_dict:
-            tvdb_episode_dict[season_number] = {}
-
-        tvdb_episode_dict[season_number][episode_number] = e
+        plex_seasons = list(filter(lambda s: s.index == season, plex_seasons))
+        tvdb_episodes = dict(filter(lambda kvp: kvp[0] == season, tvdb_episodes.items()))
+        tvdb_seasons = dict(filter(lambda kvp: kvp[0] == season, tvdb_seasons.items()))
 
     for e in plex_episodes:
-        if e.parentIndex not in tvdb_episode_dict or e.index not in tvdb_episode_dict[e.parentIndex]:
+        if e.parentIndex not in tvdb_episodes or e.index not in tvdb_episodes[e.parentIndex]:
             error_exit(f"S{e.parentIndex:02}E{e.index:02} doesn't exist in the selected TVDB order.")
 
-    progress = Bar("Updating Plex", max=len(plex_episodes))
+    for s in plex_seasons:
+        if s.index not in tvdb_seasons:
+            error_exit(f"S{s.index:02} doesn't exist in the selected TVDB order.")
+
+    progress = Bar("Updating Plex", max=len(plex_episodes) + len(plex_seasons))
 
     for e in plex_episodes:
-        tvdb_episode = tvdb_episode_dict[e.parentIndex][e.index]
+        tvdb_episode = tvdb_episodes[e.parentIndex][e.index]
 
         e.editOriginallyAvailable(tvdb_episode["aired"])
         e.editSummary(tvdb_episode["overview"])
@@ -151,6 +173,18 @@ def update_plex(season: int, plex_episodes: list[Episode], tvdb_episodes: list[d
 
         if tvdb_episode["image"]:
             e.uploadPoster("https://thetvdb.com" + tvdb_episode["image"])
+
+        progress.next()
+
+    for s in plex_seasons:
+        tvdb_season = tvdb_seasons[s.index]
+
+        if "overview" in tvdb_season:
+            s.editSummary(tvdb_season["overview"])
+        if "name" in tvdb_season:
+            s.editTitle(tvdb_season["name"])
+        if tvdb_season["image"]:
+            s.uploadPoster(tvdb_season["image"])
 
         progress.next()
 
