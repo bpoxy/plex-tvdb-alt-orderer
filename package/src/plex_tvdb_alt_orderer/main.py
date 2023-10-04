@@ -5,7 +5,7 @@ import re
 import validators
 from plexapi.myplex import MyPlexAccount, PlexServer
 from plexapi.library import ShowSection
-from plexapi.video import Episode, Show
+from plexapi.video import Show
 from progress.bar import Bar
 from termcolor import colored
 from tvdb_v4_official import TVDB
@@ -183,7 +183,7 @@ def update_plex(season: int, plex_show: Show, tvdb_episodes: dict, tvdb_seasons:
             s.editSummary(tvdb_season["overview"])
         if "name" in tvdb_season:
             s.editTitle(tvdb_season["name"])
-        if tvdb_season["image"]:
+        if "image" in tvdb_season and tvdb_season["image"]:
             s.uploadPoster(tvdb_season["image"])
 
         progress.next()
